@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+
+    <link rel="stylesheet" href="https://cdn.ctat.cs.cmu.edu/releases/lab/guppy/guppy-default-osk.min.css">
+    <link rel="stylesheet" href="https://cdn.ctat.cs.cmu.edu/releases/lab/CTAT.css" type="text/css">
+    <link rel="stylesheet" href="Assets/typein-whole-common.css" type="text/css">
+
+    <script src="Assets/transaction_mailer_users.js"></script>
+    <script src="https://cdn.ctat.cs.cmu.edu/releases/lab/guppy/guppy_plus_osk.min.js"></script>
+    <script src="https://cdn.ctat.cs.cmu.edu/releases/lab/jquery.min.js"></script>
+    <script src="https://cdn.ctat.cs.cmu.edu/releases/lab/ctat.min.js"></script>
+    <script src="https://cdn.ctat.cs.cmu.edu/releases/lab/ctatloader.js"></script>
+    <script src="https://cdn.ctat.cs.cmu.edu/releases/lab/nools.js"></script>
+
+    <script src="Assets/math.js"></script>
+    <script src="Assets/modelhelperfuns.js"></script>
+    <script src="Assets/typein-common.js"></script>
+    <script>
+      window.interfaceType = "typein"
+    </script>
+    <script>
+function createSkillSelection() {
+  // Fetch Skill Bars
+  var mainDiv = document.getElementById('progressBar');
+
+  // Get all divs with class "CTATSkillWindow--skill" inside the main div
+  var skillDivs = mainDiv.getElementsByClassName('CTATSkillWindow--skill');
+  // Iterate over each skill div
+  for (var i = 0; i < skillDivs.length; i++) {
+    var skillDiv = skillDivs[i];
+
+    // Get the label div and fetch its inner HTML
+    var labelDiv = skillDiv.getElementsByClassName('CTATSkillWindow--label')[0];
+    var label = labelDiv.innerHTML;
+
+    // Get the mastery bar div and fetch the percentage width
+    var barDiv = skillDiv.getElementsByClassName('CTATSkillWindow--bar')[0];
+    var masteryBarDiv = barDiv.getElementsByClassName('CTATSkillWindow--initial')[0];
+    var width = masteryBarDiv.style.width;
+
+    // Create a new HTML element with the label and width values
+    var newElement = document.createElement('div');
+
+    // Create a checkbox element
+    var checkbox = document.createElement('div');
+    checkbox.type = 'checkbox';
+    checkbox.id = 'check' + (i + 1); // Add an ID with incrementing numbers
+    checkbox.className = 'CTATCheckBox'; // Add the class "CTATCheckBox"
+    checkbox.name = 'skillSelection'; // Add the name "skillSelection"
+    checkbox.setAttribute('data-ctat-tutor', 'false'); // Add the data attribute "data-ctat-tutor" with value "false"
+    newElement.appendChild(checkbox);
+
+    // Create a label for the checkbox
+    var checkboxLabel = document.createElement('label');
+    checkboxLabel.htmlFor = 'check' + (i + 1); // Set the label's "for" attribute to match the checkbox ID
+    checkboxLabel.textContent = label + ': ' + width;
+    newElement.appendChild(checkboxLabel);
+
+
+    // Append the new element below the "doneButton" element
+    var doneButton = document.getElementById('doneButton');
+    doneButton.parentNode.insertBefore(newElement, doneButton);
+  }
+}
+
+    </script>
+    <script>
+      // Overwrite Done Button Text
+      document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('doneButton').getElementsByClassName('CTAT-done-button--text')[0].innerHTML = 'Submit Selection';
+        setTimeout(createSkillSelection, 250); // needs timeout for some reason, otherwise % is not loaded
+      });
+      
+    </script>
+  </head>
+
+  <body>
+    <div id="container">
+      <div id="topPanel">
+        <div class="row" style="visibility: hidden; display: none;">
+          <div class="problemText solveGroup">Please solve for x</div>
+        </div>
+        <div class="row">
+          <div id="givenGroup" class="solveGroup" style="visibility: hidden; display: none;">
+            <div id="start" class="CTATMathInput" data-ctat-tutor="false" data-ctat-highlight="false"></div>
+          </div>
+        </div>
+      </div>
+      <div id="middlePanel">
+        <template id="rowTemplate">
+          <div class="row"  style="visibility: hidden; display: none;">
+            <div class="solveGroup CTATGroupingComponent" data-ctat-use-componentlist="false">
+              <div class="CTATMathInput" data-ctat-highlight="false"></div>
+              <div class="feedback"></div>
+            </div>
+          </div>
+        </template>
+        <div class="row buttons">
+          <div class="solveGroup">
+            <div id="hintButton" class="CTATHintButton" style="visibility: hidden; display: none;"></div>
+          </div>
+        </div>
+        <div class="row hints" style="visibility: hidden; display: none;">
+          <div class="solveGroup">
+            <div id="HintWindow" class="CTATHintWindow" ></div>
+          </div>
+        </div>
+        Select one or more skills to work on.
+        <br>
+        <div id="doneButton" class="CTATDoneButton"></div>
+      </div>
+      <div id="bottomPanel" style="visibility: hidden; display: none;">
+        <div id="progressBar" class="CTATSkillWindow" data-ctat-initial="true"></div>
+      </div>
+    </div>
+  </body>
+  <script>
+    // TODO
+    detectorListener = {
+      processCommShellEvent: function(event, msg) {
+        if (event ==="UntutoredAction") { //the event fired when tracer gets results of a hint trace
+          var helloworld = msg;
+          console.log('THE EVENT TYPE: '+event)
+          //let sai = msg.getSAI(); //get the tutor's SAI
+          //let is_detector = sai.getAction() == 'UpdateVariable'; // CHECK THIS TO DO
+          //let component = CTATShellTools.findComponent(sai.getSelection())[0]; //find the component
+          console.log('Detector message listener');
+          //console.log('sai: '+sai);
+          console.log('component: '+JSON.stringify(msg, null, 4));
+
+          console.log('TYPE OF: ' + typeof msg);
+      }
+    }};
+    hintListener = {
+      processCommShellEvent: function(event, msg) {
+        if (event ==="ShowHintsMessage") { //the event fired when tracer gets results of a hint trace
+          let sai = msg.getSAI(); //get the tutor's SAI
+          let component = CTATShellTools.findComponent(sai.getSelection())[0]; //find the component
+          console.log('Hint message listener');
+          console.log('sai: '+sai);
+          console.log('component: '+component);
+          component[sai.getAction()](sai.getInput()); //call component.action(input)
+      }
+    }};
+    document.addEventListener('tutorInitialized', function () {
+      CTATCommShell.commShell.addGlobalEventListener(detectorListener );
+      CTATCommShell.commShell.addGlobalEventListener(hintListener);
+    });
+  </script>
+  <script>
+    // Get the div and button elements
+const wantsFpRadioButton = document.getElementById('wantsfp');
+const noFpRadioButton = document.getElementById('nofp');
+
+function pressDoneButton() {
+  const doneButtonDiv = document.getElementById('doneButton');
+  const doneButton = doneButtonDiv.querySelector('button');
+  doneButton.click(); // Simulate a click event on the button element
+}
+// Add event listeners to the radio buttons
+//wantsFpRadioButton.addEventListener('click', pressDoneButton);
+//noFpRadioButton.addEventListener('click', pressDoneButton);
+
+
+
+      </script>
+</html>

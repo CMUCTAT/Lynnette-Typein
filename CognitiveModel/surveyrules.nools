@@ -34,7 +34,7 @@ rule bootstrap {
 
 rule doneviasurvey {
 	when {
-		sv: StudentValues (sv.selection!="done" && sv.action==="ButtonPressed") || sv.action==="UpdateRadioButton";
+		sv: StudentValues (sv.selection!="done" && sv.action==="ButtonPressed") || sv.action==="UpdateRadioButton" || sv.action==="UpdateCheckBox";
 	}
 	then {
 		if (checkSAI({selection: "done", action: "ButtonPressed", input: -1})) {
