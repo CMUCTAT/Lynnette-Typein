@@ -127,6 +127,8 @@ rule bootstrap {
 		setProblemAttribute("use_backtracking", true);
 		setProblemAttribute("use_hint_fact", true);
 		
+		setProblemAttribute("report_next_steps", true);
+
 		//TPAs to set up initial expression
 		if (config.dragNDrop) {
 			assert(new TPA('_root', "setEqn", initStr));
