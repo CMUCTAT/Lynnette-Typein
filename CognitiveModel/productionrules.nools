@@ -289,6 +289,7 @@ function checkCanSimplify() {
 
 //handles new student input, assert new cycleInfo fact
 rule focusSolutionStep {
+	salience: 1
 	when {
 		not (h: IsHintMatch);
 		not (ci: cycleInfo);
@@ -341,8 +342,58 @@ rule focusSolutionStep {
 		if (!valid) {
 			checkSAI({selection: sv.selection, action: sv.action, input: sv.input}, null, true);
 			msg && assert(new BugMessage(msg));
-		}
+			backtrack();
+		} else {
 		
+			let initialEqProperties = {
+				left: {
+					multipliedBy: e1.multipliedBy,
+					dividedBy: e1.dividedBy,
+					varOrConstSide: e1.varOrConstSide
+				},
+				right: {
+					multipliedBy: e2.multipliedBy,
+					dividedBy: e2.dividedBy,
+					varOrConstSide: e2.varOrConstSide
+				}
+			};
+			modify(sv, "inputSimplified", simpStudentInput);
+			var ci = assert(new cycleInfo("full", sel, true, p.nTransLastCycle, eStr, e1Clone, e2Clone, null, null, initialEqProperties, "abstract", false));
+			assert(new rowInfo(16-rows.length));
+			if (!algSimplified(e1Str) || !algSimplified(e2Str)) {
+				modify(ci, "needSimp", true);
+			}
+		}
+	}
+}
+
+rule doNextStepSearch {
+	salience: 0
+	when {
+		not (h: IsHintMatch);
+		not (ci: cycleInfo);
+		p: Problem !p.equationChanged {rows: rows};
+		sv: StudentValues sv.tutored {selection: sel};
+		ie1: interfaceElement ie1.name === rows[0] && !ie1.value;
+		svNum: Number from getNumFromRowName(sel);
+		lastSvNum: Number lastSvNum < svNum from getNumFromRowName(p.lastRowId);
+		e1: TreeExp e1.side === "left";
+		e2: TreeExp e2.side === "right";
+	} then {
+
+		clearInputHistory();
+		
+		let e1Str = e1.tree.toString(),
+			e2Str = e2.tree.toString(),
+			eStr = e1Str+'='+e2Str,
+			e1Clone = e1.tree.clone(),
+			e2Clone = e2.tree.clone();
+		
+		var parsed = algParse(sv.input, true, true);
+			
+		let simpStudentInput = sv.input;
+		modify(sv, "inputSimplified", simpStudentInput);
+					
 		let initialEqProperties = {
 			left: {
 				multipliedBy: e1.multipliedBy,
@@ -355,14 +406,15 @@ rule focusSolutionStep {
 				varOrConstSide: e2.varOrConstSide
 			}
 		};
-		modify(sv, "inputSimplified", simpStudentInput);
-		var ci = assert(new cycleInfo("full", sel, true, p.nTransLastCycle, eStr, e1Clone, e2Clone, null, null, initialEqProperties, "abstract", !valid));
+		
+		var ci = assert(new cycleInfo("full", sel, true, p.nTransLastCycle, eStr, e1Clone, e2Clone, null, null, initialEqProperties, "abstract", true));
 		assert(new rowInfo(16-rows.length));
+		
 		if (!algSimplified(e1Str) || !algSimplified(e2Str)) {
 			modify(ci, "needSimp", true);
 		}
 	}
-}
+} 
 
 rule startHintCycle {
 	when {
