@@ -20,6 +20,8 @@ define Problem {     // do we need this at all? mostly used for accessing the so
 
 	lastRowId: "solve0",
 
+	generatePathsOnCorrect: false,
+
 	constructor: function(n,l, config, xVal) {
 		this.solution = xVal;
 		this.name = n;
@@ -53,6 +55,7 @@ define Problem {     // do we need this at all? mostly used for accessing the so
 		if (!config.diagramsFirst) {
 			this.generatingSteps = true;
 		}
+		this.generatePathsOnCorrect = config.generatePathsOnCorrect || false;
 	}
 }
 
@@ -135,6 +138,8 @@ define cycleInfo {      // stores info that is needed only for the duration of t
 		this.ogLeftTree = ogLeftTree;
 		this.ogRightTree = ogRightTree;
 		
+		this.steps = [];
+
 		this.stepType = st;
 		
 		this.interfaceElement = ie;

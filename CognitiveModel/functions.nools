@@ -312,3 +312,14 @@ function hasCancelable(exp) {
 	return mathUtil.hasCancelable(exp);
 }
 
+/**
+ functions for tracking solution paths
+ */
+
+function clearSolutionPaths() {
+	window._solutionPaths = [];
+}
+
+function addSolutionPath(path) {
+	window._solutionPaths.push(path);
+}

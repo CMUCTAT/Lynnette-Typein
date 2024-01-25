@@ -29,7 +29,8 @@ rule bootstrap {
 			allowNonStrategic: false,
 			diagramsFirst: false,
 			distributionIsTransformation: true,
-			varName: "x"
+			varName: "x",
+			generatePathsOnCorrect: false
 		},
 		solution = null;
 		//set up problem config
@@ -100,6 +101,11 @@ rule bootstrap {
 			config.distributionIsTransformation = distributionIsTransformation;
 		} catch (e) {}
 		
+		//whether to generate remaining solution paths following a correct step
+		try {
+			config.generatePathsOnCorrect = generatePathsOnCorrect;
+		} catch(e) {}
+
 		//setting up interface (one input)
 		var initName = "start";
 		assert(new interfaceElement(initName, initStr));
@@ -168,8 +174,6 @@ rule bootstrap {
 					modify(p, "diagramsShown", true);
 				} else {
 					assert( new TPA("_root", "chooseDiagram", 'given') );
-		//			assert( new TPA("_root", "showNextRow", '') );
-		//			modify(p, "timeToGenSteps", true);
 				}
 			} else {
 				assert(new TPA("_root", "showNextRow", ''));
@@ -256,8 +260,6 @@ rule DoneSolvingForX {
 				
 				if (p.chooseDiagrams) {
 					assert(new TPA("_root", "chooseDiagram", "given"));
-		//			assert(new TPA("_root", "showNextRow", ''));
-		//			modify(p, "timeToGenSteps", true);
 				} else {
 					assert(new TPA("_root", "showDiagrams", ''));
 				}
@@ -272,10 +274,7 @@ rule DoneSolvingForX {
 			
             console.log("DoneSolvingForX; cycleInfo.opStr is: "+ci.opStr);
             
-            
-	//		if (!p.chooseDiagrams) {
-				halt();
-	//		}
+            halt();
 		}
 	}	
 }
@@ -498,7 +497,7 @@ rule writeAbstract {
 			}
 		};
 		
-		if (compFunc(sv.inputSimplified, simplifiedInput)) {
+		if (compFunc(sv.inputSimplified, simplifiedInput) || p.findingAllSolutionPaths) {
 			//match found in abstract search
 			//console.log("abstract match found: "+simplifiedInput);
 			//start detailed search:
@@ -538,7 +537,7 @@ rule write {
 		ci: cycleInfo ci.searchType === "detailed" && !ci.reqTransformations.length
 			{selection: s, copyOK: cOK, inputs: inputList, opStr: os, ogStr: expAtStart};
 		sv: StudentValues sv.selection === s {input : studentInput};
-		p: Problem !p.dragNDrop && (ci.modified || cOK) {rows: rows, stepSkipLevel: ssl};
+		p: Problem !p.findingAllSolutionPaths && !p.dragNDrop && (ci.modified || cOK) {rows: rows, stepSkipLevel: ssl};
 		ie: interfaceElement ie.name === rows[0];
 		e1: TreeExp e1.side === 'left';
 		e2: TreeExp e2.side == 'right';
@@ -722,13 +721,90 @@ rule write {
 				retract(ci);
 				
 				if( !p.timeToGenSteps ) {
-					halt();
+					if (p.generatePathsOnCorrect) {
+						modify(p, "timeToFindAllSolutionPaths", true);
+					} else {
+						halt();
+					}
 				}
 			}
 		} else {
 			//wrong
 			backtrack();
 		}
+	}
+}
+
+rule startFindAllSolutionPaths {
+	salience: 50;
+	when {
+		p: Problem p.timeToFindAllSolutionPaths;
+		e1: TreeExp e1.side === "left";
+		e2: TreeExp e2.side === "right";
+	} then {
+		
+		clearInputHistory();
+		clearSolutionPaths();
+
+		let e1Str = e1.tree.toString(),
+			e2Str = e2.tree.toString(),
+			eStr = e1Str+'='+e2Str,
+			e1Clone = e1.tree.clone(),
+			e2Clone = e2.tree.clone();
+		
+		let sv = getStudentInput();
+		let simpStudentInput = eStr;
+		modify(sv, "inputSimplified", simpStudentInput);
+		modify(sv, "input", simpStudentInput);
+					
+		let initialEqProperties = {
+			left: {
+				multipliedBy: e1.multipliedBy,
+				dividedBy: e1.dividedBy,
+				varOrConstSide: e1.varOrConstSide
+			},
+			right: {
+				multipliedBy: e2.multipliedBy,
+				dividedBy: e2.dividedBy,
+				varOrConstSide: e2.varOrConstSide
+			}
+		};
+		
+		var ci = assert(new cycleInfo("full", sv.selection, true, p.nTransLastCycle, eStr, e1Clone, e2Clone, null, null, initialEqProperties, "abstract", false));
+		assert(new rowInfo(16-p.rows.length));
+		
+		if (!algSimplified(e1Str) || !algSimplified(e2Str)) {
+			modify(ci, "needSimp", true);
+		}
+		modify(p, "timeToFindAllSolutionPaths", false);
+		modify(p, "findingAllSolutionPaths", true);
+	}
+}
+
+rule foundSolutionPath {
+	salience: 50;
+	when {
+		p: Problem p.findingAllSolutionPaths;
+		leftExp: TreeExp leftExp.side === "left";
+		leftStr: String from leftExp.toString();
+		rightExp: TreeExp rightExp.side === "right";
+		rightStr: String (rightStr === p.varName && !getIsNaN(leftStr)) || (leftStr === p.varName && !getIsNaN(rightStr)) from rightExp.toString();
+		ci: cycleInfo ci.searchType === "detailed";
+		ri: rowInfo;
+	} then {
+		console.log("got a solution path: ", ci.steps);
+		addSolutionPath(ci.steps.slice());
+		backtrack();
+	}
+}
+
+rule doneFindAllSolutionPaths {
+	salience: 49;
+	when {
+		p: Problem p.timeToFindAllSolutionPaths;
+	} then {
+		modify(p, "timeToFindAllSolutionPaths", false);
+		halt();
 	}
 }
 

@@ -6,7 +6,6 @@ rule simplifyForAbstractSearch {
         e1: TreeExp e1.side === "left";
         e2: TreeExp e2.side === "right";
     } then {
-        console.log("simplifyForAbstractSearch:",e1.toString(),e2.toString()); 
         let simpTree1 = simplifyNoDistribute(e1.tree,true),
             simpTree2 = simplifyNoDistribute(e2.tree,true);
         
@@ -16,7 +15,6 @@ rule simplifyForAbstractSearch {
         if (!ci.modified) {
             modify(ci, "modified", true);
         }
-        console.log("after simplify:",simpTree1.toString(),simpTree2.toString());
     }
 }
 
@@ -131,6 +129,7 @@ rule DistributeMultiplicationOrDivision{
                     ciMods.needSimp = true;
                 } else {
                     ciMods.reqTransformations = ci.reqTransformations.slice(1);
+                    ciMods.steps = ci.steps.slice().concat({input: hintInput, skill});
                 }
                 
                 //check if step matches diagram picked (diagram first only)
@@ -229,6 +228,7 @@ rule multiplyBothSides {
                 ciMods.needSimp = true;
             } else {
                 ciMods.reqTransformations = ci.reqTransformations.slice(1);
+                ciMods.steps = ci.steps.slice().concat({input});
             }
             equationChanged(e1, newExp1, {multipliedBy: multByStr});
             equationChanged(e2, newExp2, {multipliedBy: multByStr});
@@ -279,12 +279,13 @@ rule divideFactor{
         var input = (e1.side === "left" ? newExp1Str+' = '+newExp2Str : newExp2Str+' = '+newExp1Str);
         var newOpStr = ci.opStr+'t,divideFactor '+distTerm.coeff+';';
         var toMemo = ci.searchType === "abstract" ? sortLikeTransformations(newOpStr) : newFull;
-        
         setCTNodeData(toMemo);
-        if (ci.searchType === "abstract" || ci.selection === "hint") {
-            assert(new Skill("division-complex", "transformation"));
-        }
         
+        var skill = "division-complex";
+        if (ci.searchType === "abstract" || ci.selection === "hint") {
+            assert(new Skill(skill, "transformation"));
+        }
+
         //gen diagram data
         if (ci.isNextStepSearch || ci.searchType === "detailed") {
             var newTrans = {
@@ -336,6 +337,7 @@ rule divideFactor{
                 ciMods.needSimp = true;
             } else {
                 ciMods.reqTransformations = ci.reqTransformations.slice(1);
+                ciMods.steps = ci.steps.slice().concat({input, skill});
             }
             equationChanged(e1, newExp1, {'dividedBy': ''+distTerm.coeff});
             equationChanged(e2, newExp2, {'dividedBy': ''+distTerm.coeff});
@@ -402,7 +404,7 @@ rule divideByXCoefficient {
             if (ci.searchType === "abstract" || ci.selection === "hint") {
                 assert(new Skill(divType, "transformation"));
             }
-            
+
             //gen diagram data
             if (ci.isNextStepSearch || ci.searchType === "detailed") {
                 var newTrans = {
@@ -453,6 +455,7 @@ rule divideByXCoefficient {
                     ciMods.needSimp = true;
                 } else {
                     ciMods.reqTransformations = ci.reqTransformations.slice(1);
+                    ciMods.steps = ci.steps.slice().concat({input: preParseInput, skill: divType});
                 }
                 
                 equationChanged(e1, newExp1, {'dividedBy': ''+varTerm.coeff});
@@ -493,9 +496,7 @@ rule divideByAbsValOfXCoefficient {
         var side1 = e1.side;
         var expBefore = getFullStr(e1, e2);
         var preParse1 = mathUtil.divideBy(e1.tree.toString(), absVal);
-        var preParse2 = mathUtil.divideBy(e2.tree.toString(), absVal);
-        var preParseInput = e1.side === "left" ? preParse1+' = '+preParse2 : preParse2+' = '+preParse1;
-        
+        var preParse2 = mathUtil.divideBy(e2.tree.toString(), absVal);        
         
         var newExp1 = algParse(preParse1, true, true);//algApplyRules(algParse(preParse1, true, true), ["popNegation"]);
         var newExp2 = algParse(preParse2, true, true);//algApplyRules(algParse(preParse2, true, true), ["popNegation"]);
@@ -535,6 +536,7 @@ rule divideByAbsValOfXCoefficient {
                 ciMods.needSimp = true;
             } else {
                 ciMods.reqTransformations = ci.reqTransformations.slice(1);
+                ciMods.steps = ci.steps.slice().concat({input, skill: divType});
             }
             
             equationChanged(e1, newExp1, {'dividedBy': ''+absVal});
@@ -664,6 +666,7 @@ rule addSubtractSimpleTerm{
                 ciMods.needSimp = true;
             } else {
                 ciMods.reqTransformations = ci.reqTransformations.slice(1);
+                ciMods.steps = ci.steps.slice().concat({input, skill});
             }
             
             equationChanged(subtractFrom, newExp1, {"varOrConstSide": subtractingConst ? "var" : "const"});
@@ -692,7 +695,7 @@ rule addSubtractSimpleTerm{
 rule nonStrategicAddSubtractSimpleTerm {
     salience: -2;
     when {
-        p: Problem;
+        p: Problem !p.findingAllSolutionPaths;
         subtractFrom: TreeExp {side: fromSide};
         otherSide: TreeExp otherSide.side !== subtractFrom.side {side: toSide};
         termObj: Object from getNonStrategicSubtractableTerms(subtractFrom, otherSide);

@@ -144,6 +144,7 @@ rule distributeNegOne { //special case for -(ax+n)
 				ciMods.needSimp = true;
 			} else {
 				ciMods.reqTransformations = ci.reqTransformations.slice(1);
+				ciMods.steps = ci.steps.slice().concat({input, skill});
 			}
 		
 			equationChanged(exp, newExp);
@@ -207,7 +208,10 @@ rule Divide{
 		newFullStr = newExpStr < otherExpStr ? newExpStr + ' = ' + otherExpStr : otherExpStr + ' = ' + newExpStr;
 		let input = exp.side === "left" ? newExpStr+' = '+otherExpStr : otherExpStr+' = '+newExpStr;
 		setCTNodeData(input);
-		assert(new Skill("divide", "simplification"));
+		
+		let skill = "divide";
+		assert(new Skill(skill, "simplification"));
+		
 		if(ci.isNextStepSearch) {
 			setChainPriority(1);
 			assert(new Hint("You can simplify the fraction on the "+s+" side."));
@@ -238,9 +242,10 @@ rule Divide{
 			backtrack();
 		} else {
 			recordInput(newFullStr, 'full-detailed');
-		
 			equationChanged(exp, newExp);
-			bulkModify(ci, {"modified": true, "opStr": newOpStr});
+			
+			let newSteps = ci.steps.slice().concat({input, skill});
+			bulkModify(ci, {"modified": true, "opStr": newOpStr, "steps": newSteps});
 		}
 	}
 }
@@ -309,9 +314,10 @@ rule Multiply{
 			backtrack();
 		} else{
 			recordInput(newFullStr, 'full-detailed');
-		
 			equationChanged(exp, newExp);
-			bulkModify(ci, {"modified": true, "opStr": newOpStr});
+			
+			let newSteps = ci.steps.slice().concat({input});
+			bulkModify(ci, {"modified": true, "opStr": newOpStr, "steps": newSteps});
 		}
 	}
 }
@@ -392,40 +398,10 @@ rule CancelOrCombineLikeTerms {
 			backtrack();
 		} else{
 			recordInput(newFullStr, 'full-detailed');
-		
 			equationChanged(exp, newExp);
-			bulkModify(ci, {"modified": true, "opStr": newOpStr});
+			
+			let newSteps = ci.steps.slice().concat({input, skill});
+			bulkModify(ci, {"modified": true, "opStr": newOpStr, "steps": newSteps});
 		}
 	}
 }
-
-/*
-rule CancelTerms {
-	salience : 7;
-	when {
-		p: Problem !p.equationChanged;
-		ci: cycleInfo;
-		exp: TreeExp;
-		termPair: Object from getCancelableTerms(exp);
-	}
-	then {
-		var t1 = termPair.t1,
-			t2 = termPair.t2,
-			termParent = t1.parent;
-		
-		var newParentTerms = termParent.terms.slice(); //copy terms arr of parent node to cancel terms
-		newParentTerms.splice(newParentTerms.indexOf(t1.term), 1); //rem t1 from copy
-		newParentTerms.splice(newParentTerms.indexOf(t2.term), 1); //rem t2 from copy
-		var newParentTree = algParse(termParent.toString()); //copy of parent tree
-		newParentTree.terms = newParentTerms; //replace tree copy terms w/ our own
-		var newParentStr = newParentTree.toString(); //stringify modified tree copy
-		
-		var newExpStr = exp.tree.toString().replace(termParent.toString(), newParentStr); //replace old parent str w/ ours
-		
-		console.log("cancelTerms got newExpStr "+newExpStr);
-		
-		modify(exp, "tree", algParse(newExpStr));
-		modify(p, 'equationChanged', true);
-	}
-}
-*/
