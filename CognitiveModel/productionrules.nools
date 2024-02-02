@@ -154,7 +154,7 @@ rule bootstrap {
 		console.log("got variable: ",varName);
 		var p = new Problem(pName, rowNames, config, solution);
 		assert(p);
-		assert(new TPA("solveForText", "UpdateTextField", "Please solve for "+varName));
+		assert(new TPA("solveForText", "UpdateTextField", "Please simplify the equation"));
         if (solution) {
 			
 			//TPA to display tape diagrams for initial exp
