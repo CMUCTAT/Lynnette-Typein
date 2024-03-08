@@ -30,7 +30,8 @@ rule bootstrap {
 			diagramsFirst: false,
 			distributionIsTransformation: true,
 			varName: "x",
-			generatePathsOnCorrect: false
+			generatePathsOnCorrect: false,
+			showNextRowOnCorrect: true,
 		},
 		solution = null;
 		//set up problem config
@@ -104,6 +105,11 @@ rule bootstrap {
 		//whether to generate remaining solution paths following a correct step
 		try {
 			config.generatePathsOnCorrect = generatePathsOnCorrect;
+		} catch(e) {}
+
+		//whether to reveal next input row on correct step
+		try {
+			config.showNextRowOnCorrect = showNextRowOnCorrect;
 		} catch(e) {}
 
 		//setting up interface (one input)
@@ -295,16 +301,13 @@ rule focusSolutionStep {
 		not (h: IsHintMatch);
 		not (ci: cycleInfo);
 		p: Problem !p.equationChanged {rows: rows};
-		sv: StudentValues sv.tutored {selection: sel};
-		ie1: interfaceElement ie1.name === rows[0] && !ie1.value;
-		svNum: Number from getNumFromRowName(sel);
-		lastSvNum: Number lastSvNum < svNum from getNumFromRowName(p.lastRowId);
 		e1: TreeExp e1.side === "left";
 		e2: TreeExp e2.side === "right";
 	}
 	then {
 		clearInputHistory();
-		
+		let sv = getStudentInput();
+		let sel = sv.selection;
 		let e1Str = e1.tree.toString(),
 			e2Str = e2.tree.toString(),
 			eStr = e1Str+'='+e2Str,
@@ -374,15 +377,14 @@ rule doNextStepSearch {
 		not (h: IsHintMatch);
 		not (ci: cycleInfo);
 		p: Problem !p.equationChanged {rows: rows};
-		sv: StudentValues sv.tutored {selection: sel};
-		ie1: interfaceElement ie1.name === rows[0] && !ie1.value;
-		svNum: Number from getNumFromRowName(sel);
-		lastSvNum: Number lastSvNum < svNum from getNumFromRowName(p.lastRowId);
 		e1: TreeExp e1.side === "left";
 		e2: TreeExp e2.side === "right";
 	} then {
 
 		clearInputHistory();
+
+		let sv = getStudentInput();
+		let sel = sv.selection;
 		
 		let e1Str = e1.tree.toString(),
 			e2Str = e2.tree.toString(),
@@ -705,7 +707,9 @@ rule write {
 						modify(p, "currentDiagram", diagramData);
 					}
 				} else {
-					assert(new TPA("_root", "showNextRow", 'arg'));
+					if (p.showNextRowOnCorrect) {
+						assert(new TPA("_root", "showNextRow", 'arg'));
+					}
 				}
 				
 				//set wm expressions to student's version
