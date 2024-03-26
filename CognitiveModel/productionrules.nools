@@ -157,7 +157,6 @@ rule bootstrap {
 		modify(initRightExp, "eqData", resRight);
 		var varName = resLeft.varName || resRight.varName;
 		config.varName = varName;
-		console.log("got variable: ",varName);
 		var p = new Problem(pName, rowNames, config, solution);
 		assert(p);
 		assert(new TPA("solveForText", "UpdateTextField", "Please simplify the equation"));
@@ -166,9 +165,6 @@ rule bootstrap {
 			//TPA to display tape diagrams for initial exp
 			if (config.useDiagrams) {
 				var argStr = (initLeft+' = '+initRight+','+solution+',') + (config.diagramsFirst ? 'diagramsFirst' : 'diagramsLast');
-				
-				console.log("argStr is "+argStr);
-				
 				
 				assert(new TPA("_root", "setGivenDiagrams", argStr));
 				modify(p, "currentDiagram", {
@@ -233,8 +229,8 @@ rule DoneSolvingForX {
 		ri: rowInfo;
 	} then {
 		var xVal = leftSimpd === p.varName ? rightSimpd : leftSimpd;
-		console.log("solved for x: "+xVal);
-		console.log("skills are: ",getFacts("Skill"));
+		//console.log("solved for x: "+xVal);
+		//console.log("skills are: ",getFacts("Skill"));
 		if ((+xVal)%1 !== 0) {
 			throw new Error("non-integer value of x");
 		} else {
@@ -346,9 +342,10 @@ rule focusSolutionStep {
 		if (!valid) {
 			checkSAI({selection: sv.selection, action: sv.action, input: sv.input}, null, true);
 			msg && assert(new BugMessage(msg));
+
 			backtrack();
 		} else {
-		
+
 			let initialEqProperties = {
 				left: {
 					multipliedBy: e1.multipliedBy,
@@ -796,7 +793,6 @@ rule foundSolutionPath {
 		ci: cycleInfo ci.searchType === "detailed";
 		ri: rowInfo;
 	} then {
-		console.log("got a solution path: ", ci.steps);
 		addSolutionPath(ci.steps.slice());
 		backtrack();
 	}
