@@ -585,7 +585,7 @@ rule write {
 				var tInput = tSai.input;
 				var tInputSides = tInput.split("=").map((s)=>algParse(s,true,true).toString());
 				//if no operations, only consider correct if swapped
-				if (ops.length && checkEqualEquation(sInputStrs[0], tInputSides[0]) && checkEqualEquation(sInputStrs[1], tInputSides[1])) {
+				if (checkEqualEquation(sInputStrs[0], tInputSides[0]) && checkEqualEquation(sInputStrs[1], tInputSides[1])) {
 					//console.log("NOT SWAPPED");
 					//console.log("ops are ",ops);
 					return true;
@@ -612,6 +612,12 @@ rule write {
 				backtrack();
 			}else{
 				//correct
+
+				if (!swapped && !ops.length) {
+					//equation unchanged
+					assert(new SuccessMessage("While that is technically correct, it does not get you any closer to the solution."));
+				}
+
 				modify(ie, "value", input);    
 				
 				if (!(!ci.otherSideFree || ci.focus === "full")) {
