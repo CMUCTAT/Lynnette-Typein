@@ -1,3 +1,4 @@
+
 import("types.nools");
 import("functions.nools");
 import("transformations.nools");
@@ -576,14 +577,15 @@ rule write {
 		}
 		var isBug = ci.inputIsBug || skippedTooManySteps || needToSimplify;
 		
-		var sInputSides = studentInput.split("=").map((s)=>algParse(s, true, true));
+		var sInputSides = studentInput.split("=").map(stableParse);
 		var sInputStrs = sInputSides.map((s)=>s.toString());
+		
 		var swapped = false;
 		var compFunc = function(sSai, tSai) {
 			var match = (sSai.selection === tSai.selection && sSai.action === tSai.action);
 			if (match) {
 				var tInput = tSai.input;
-				var tInputSides = tInput.split("=").map((s)=>algParse(s,true,true).toString());
+				var tInputSides = tInput.split("=").map((s)=>stableParse(s).toString());
 				//if no operations, only consider correct if swapped
 				if (checkEqualEquation(sInputStrs[0], tInputSides[0]) && checkEqualEquation(sInputStrs[1], tInputSides[1])) {
 					//console.log("NOT SWAPPED");

@@ -257,6 +257,7 @@ rule divideFactor{
         p: Problem;
         e1: TreeExp e1.eqData.operation === "dist-times" {side: side1};
         distTerm: Object !distTerm.parent from e1.eqData.distributable;
+        distN: Number distN !== strToN(e1.multipliedBy) from distTerm.coeff;
         ri: rowInfo;
         ci: cycleInfo ci.selection === "hint" || (!ci.inputIsBug && ci.searchType === "abstract") || nextTransformationIs(ci.reqTransformations, "divideFactor", distTerm.coeff)
             {ogStr: expBefore};
@@ -401,6 +402,13 @@ rule divideByXCoefficient {
             var divType = (e1.eqData.operation === "simple" && e2.eqData.operation === "simple") ? "division-simple" : "division-complex";
             setCTNodeData(toMemo);
             if (ci.searchType === "abstract" || ci.selection === "hint") {
+                if (varTerm.coeff === -1) {
+                    divType = "Divide_both_sides_negX";
+                } else if (varTerm.coeff < 0) {
+                    divType = "Divide_both_sides_negVar";
+                } else {
+                    divType = "Divide_both_sides_posVar";
+                }
                 assert(new Skill(divType, "transformation"));
             }
 
@@ -432,6 +440,11 @@ rule divideByXCoefficient {
                 
                 if ((!p.forceSimplify || !ci.canSimplify) &&
                     (p.generatingSteps || isNextStep("division", varTerm.coeff, p))) {
+                    if (varTerm.coeff === -1) {
+                        assert(new Hint(`Remember that -${p.varName} can be thought of as -1${p.varName}.`));
+                    } else if (varTerm.coeff < 0) {
+                        assert(new Hint(`Remember that you need to divide both sides by a negative number to get rid of a negative factor in front of ${p.varName}.`));
+                    }
                     assert(new Hint(`You have a variable with a coefficient on the ${side1} side.  You can get the variable by itself by dividing both sides by the coefficient.`));
                     assert(new Hint(`Divide both sides by the coefficient of ${p.varName}, which is ${varTerm.coeff}`));
                     if (p.dragNDrop) {
@@ -553,6 +566,153 @@ rule divideByAbsValOfXCoefficient {
     }
 }
 
+
+rule divideByNeg1 {
+    salience: 6;
+    when {
+        //side1
+        // one operand of ^ is var term
+        // coeff of ^ is < -1
+        // no other var terms
+        p: Problem;
+        e1: TreeExp e1.eqData.varOperands.length === 1;
+        varTerm: Object varTerm.coeff < -1 && 
+            (!varTerm.parent || (varTerm.parent === e1.tree && !isCancelable(varTerm, e1)))
+            from e1.eqData.varOperands;
+        ci: cycleInfo ci.selection === "hint" || (!ci.inputIsBug && ci.searchType === "abstract") || nextTransformationIs(ci.reqTransformations, "divideByNeg1", -1);
+        ri: rowInfo;
+        e2: TreeExp e2.side !== e1.side && !e2.eqData.hasVar;
+    }
+    then{
+        var side1 = e1.side;
+        var expBefore = getFullStr(e1, e2);
+        var preParse1 = mathUtil.divideBy(e1.tree.toString(), -1);
+        var preParse2 = mathUtil.divideBy(e2.tree.toString(), -1);        
+        
+        var newExp1 = algParse(preParse1, true, false);
+        var newExp2 = algParse(preParse2, true, false);
+        var newExp1Str = newExp1.toString();
+        var newExp2Str = newExp2.toString();
+
+        var newFull = newExp1Str < newExp2Str ? newExp1Str + ' = ' + newExp2Str : newExp2Str + ' = ' + newExp1Str;
+        var input = (e1.side === "left" ? newExp1Str+' = '+newExp2Str : newExp2Str+' = '+newExp1Str);
+        var newOpStr = ci.opStr+'t,divideByNeg1 -1;';
+        var toMemo = ci.searchType === "abstract" ? sortLikeTransformations(newOpStr) : newFull;
+        
+        setCTNodeData(toMemo);
+        
+        let skill = varTerm.coeff === -1 ? "Divide_both_sides_negX" : "Divide_both_sides_negVar";
+        if (ci.searchType === "abstract" || ci.selection === "hint") {
+            assert(new Skill(skill, "transformation"));
+        }
+        
+        if (ci.isNextStepSearch || ci.searchType === "detailed") {
+            var newTrans = {
+                operation: 'division',
+                operand: -1,
+                expBefore: expBefore,
+                expAfter: input
+            };
+            modify(ri, "transformations", ri.transformations.slice().concat(newTrans));
+        }
+        var dupInput = inputRepeated(toMemo, 'full-'+ci.searchType);
+        if (ci.isNextStepSearch) {
+            //don't recommend this step (sub-optimal)
+            backtrack();
+        } else if (dupInput) {
+            backtrack();
+        } else {
+            recordInput(toMemo, 'full-'+ci.searchType);
+            let ciMods = {"modified": true, "opStr": newOpStr};
+            if (ci.searchType === "abstract") {
+                ciMods.needSimp = true;
+            } else {
+                ciMods.reqTransformations = ci.reqTransformations.slice(1);
+                ciMods.steps = ci.steps.slice().concat({input, skill: skill});
+            }
+            
+            equationChanged(e1, newExp1, {'dividedBy': '-1'});
+            equationChanged(e2, newExp2, {'dividedBy': '-1'});
+            
+            bulkModify(ci, ciMods);
+        }
+    }
+}
+
+rule multiplyByNeg1 {
+    salience: 6;
+    when {
+        //side1
+        // one operand of ^ is var term
+        // coeff of ^ is < 0
+        // no other var terms
+        p: Problem;
+        e1: TreeExp e1.eqData.varOperands.length === 1;
+        varTerm: Object varTerm.coeff < 0 && 
+            (!varTerm.parent || (varTerm.parent === e1.tree && !isCancelable(varTerm, e1)))
+            from e1.eqData.varOperands;
+        ci: cycleInfo ci.selection === "hint" || (!ci.inputIsBug && ci.searchType === "abstract") || nextTransformationIs(ci.reqTransformations, "multiplyByNeg1", -1);
+        ri: rowInfo;
+        e2: TreeExp e2.side !== e1.side && !e2.eqData.hasVar;
+    }
+    then{
+        var side1 = e1.side;
+        var expBefore = getFullStr(e1, e2);
+        var preParse1 = mathUtil.multiplyBy(e1.tree.toString(), -1);
+        var preParse2 = mathUtil.multiplyBy(e2.tree.toString(), -1);        
+        
+        var newExp1 = algParse(preParse1, true, false);
+        var newExp2 = algParse(preParse2, true, false);
+
+        var newExp1Str = newExp1.toString();
+        var newExp2Str = newExp2.toString();
+
+        var newFull = newExp1Str < newExp2Str ? newExp1Str + ' = ' + newExp2Str : newExp2Str + ' = ' + newExp1Str;
+        var input = (e1.side === "left" ? newExp1Str+' = '+newExp2Str : newExp2Str+' = '+newExp1Str);
+        var newOpStr = ci.opStr+'t,multiplyByNeg1 -1;';
+        var toMemo = ci.searchType === "abstract" ? sortLikeTransformations(newOpStr) : newFull;
+        
+        setCTNodeData(toMemo);
+        
+        let skill = "Divide_both_sides_negX";
+        if (ci.searchType === "abstract" || ci.selection === "hint") {
+            assert(new Skill(skill, "transformation"));
+        }
+        
+        if (ci.isNextStepSearch || ci.searchType === "detailed") {
+            var newTrans = {
+                operation: 'multiplication',
+                operand: -1,
+                expBefore: expBefore,
+                expAfter: input
+            };
+            modify(ri, "transformations", ri.transformations.slice().concat(newTrans));
+        }
+        var dupInput = inputRepeated(toMemo, 'full-'+ci.searchType);
+        if (ci.isNextStepSearch) {
+            //don't recommend this step (sub-optimal)
+            backtrack();
+        } else if (dupInput) {
+            backtrack();
+        } else {
+            recordInput(toMemo, 'full-'+ci.searchType);
+            let ciMods = {"modified": true, "opStr": newOpStr};
+            if (ci.searchType === "abstract") {
+                ciMods.needSimp = true;
+            } else {
+                ciMods.reqTransformations = ci.reqTransformations.slice(1);
+                ciMods.steps = ci.steps.slice().concat({input, skill: skill});
+            }
+            
+            equationChanged(e1, newExp1, {'multipliedBy': '-1'});
+            equationChanged(e2, newExp2, {'multipliedBy': '-1'});
+            
+            bulkModify(ci, ciMods);
+        }
+    }
+}
+
+
 /*
 transformation
 
@@ -602,7 +762,9 @@ rule addSubtractSimpleTerm{
         }
         
         setCTNodeData(toMemo);
-        let skill = termStr.includes(p.varName) ? "subtraction-var" : "subtraction-const";
+        let skill = termStr.includes(p.varName) ? "subtraction-var" : 
+            addOrSub === "subtraction" ? "Add/subtract_constant_posCon" : "Add/subtract_constant_negCon";
+        
         if (ci.searchType === "abstract" || ci.selection === "hint") {
             assert(new Skill(skill, "transformation"));
         }

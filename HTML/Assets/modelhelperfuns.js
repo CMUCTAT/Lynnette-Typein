@@ -26,7 +26,8 @@ function unknownTermStr(t, fillInCouldBe) {
 }
 
 function checkEqualEquation(input1, input2){
-	return CTATAlgebraParser.theParser.algIdentical(input1, input2, false, false);
+	const ret = CTATAlgebraParser.theParser.algIdentical(input1, input2, false, false);
+	return ret; 
 }
 
 /*check if two strings are the same expression
