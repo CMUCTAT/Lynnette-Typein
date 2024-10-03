@@ -590,8 +590,14 @@ rule addSubtractSimpleTerm{
             }
         } 
         
-        newExp1Str = newExp1.toString();
-        newExp2Str = newExp2.toString();
+        var newExp1Str = newExp1.toString();
+        var newExp2Str = newExp2.toString();
+        
+        let firstChar = termStr.charAt(0);
+        const hintInput = p.currentEqStr.split("=").map((s)=>{
+            return s+(firstChar === "-" ? "+"+termStr.slice(1) : "-"+termStr);
+        }).join(" = ");
+
         var newFull = newExp1Str < newExp2Str ? newExp1Str + ' = ' + newExp2Str : newExp2Str + ' = ' + newExp1Str;
         var input = (subtractFrom.side === "left" ? newExp1Str+' = '+newExp2Str : newExp2Str+' = '+newExp1Str);
         var newOpStr = ci.opStr+'t,addSubtractSimpleTerm '+termStr+';';
@@ -651,9 +657,13 @@ rule addSubtractSimpleTerm{
                             assert(new Hint("Drag the "+addOrSub+" sign onto the "+s+" side."));
                         }
                     } else {
-                        assert(new Hint("Enter "+input));
+                        assert(new Hint("Enter "+hintInput));
                     }
                     checkSAI({selection: "solve"+(16-p.rows.length), action: "UpdateTextField", input: input});
+                    //prioritize moving constants over variables
+                    if (subtractingConst) {
+                        setChainPriority(2);
+                    }
                 }
             }
             backtrack();

@@ -159,6 +159,7 @@ rule bootstrap {
 		config.varName = varName;
 		var p = new Problem(pName, rowNames, config, solution);
 		assert(p);
+        p.currentEqStr = initLeft+" = "+initRight;
 		assert(new TPA("solveForText", "UpdateTextField", "Please simplify the equation"));
         if (solution) {
 			
@@ -724,7 +725,7 @@ rule write {
 				equationChanged(e1, sInputSides[0], e1Props);
 				equationChanged(e2, sInputSides[1], e2Props);
 				
-				modify(p, "swapped", ci.swapped);
+                bulkModify(p, {"swapped": ci.swapped, currentEqStr: studentInput});
 				retract(ci);
 				
 				if( !p.timeToGenSteps ) {
