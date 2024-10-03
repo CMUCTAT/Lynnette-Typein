@@ -282,7 +282,7 @@ rule divideFactor{
         var toMemo = ci.searchType === "abstract" ? sortLikeTransformations(newOpStr) : newFull;
         setCTNodeData(toMemo);
         
-        var skill = "division-complex";
+        var skill = "division-pos-coef";
         if (ci.searchType === "abstract" || ci.selection === "hint") {
             assert(new Skill(skill, "transformation"));
         }
@@ -399,15 +399,15 @@ rule divideByXCoefficient {
             var input = (e1.side === "left" ? newExp1Str+' = '+newExp2Str : newExp2Str+' = '+newExp1Str);
             var newOpStr = ci.opStr+'t,divideByXCoefficient '+varTerm.coeff+';';
             var toMemo = ci.searchType === "abstract" ? sortLikeTransformations(newOpStr) : newFull;
-            var divType = (e1.eqData.operation === "simple" && e2.eqData.operation === "simple") ? "division-simple" : "division-complex";
             setCTNodeData(toMemo);
+            var divType;
             if (ci.searchType === "abstract" || ci.selection === "hint") {
                 if (varTerm.coeff === -1) {
-                    divType = "Divide_both_sides_negX";
+                    divType = "division-minus-x";
                 } else if (varTerm.coeff < 0) {
-                    divType = "Divide_both_sides_negVar";
+                    divType = "division-neg-coef";
                 } else {
-                    divType = "Divide_both_sides_posVar";
+                    divType = "division-pos-coef";
                 }
                 assert(new Skill(divType, "transformation"));
             }
@@ -520,8 +520,8 @@ rule divideByAbsValOfXCoefficient {
         var input = (e1.side === "left" ? newExp1Str+' = '+newExp2Str : newExp2Str+' = '+newExp1Str);
         var newOpStr = ci.opStr+'t,divideByAbsValOfXCoefficient '+absVal+';';
         var toMemo = ci.searchType === "abstract" ? sortLikeTransformations(newOpStr) : newFull;
-        var divType = (e1.eqData.operation === "simple" && e2.eqData.operation === "simple") ? "division-simple" : "division-complex";
         setCTNodeData(toMemo);
+        var divType = "division-pos-coef";
         if (ci.searchType === "abstract" || ci.selection === "hint") {
             assert(new Skill(divType, "transformation"));
         }
@@ -601,7 +601,7 @@ rule divideByNeg1 {
         
         setCTNodeData(toMemo);
         
-        let skill = varTerm.coeff === -1 ? "Divide_both_sides_negX" : "Divide_both_sides_negVar";
+        let skill = varTerm.coeff === -1 ? "division-minus-x" : "division-neg-coef";
         if (ci.searchType === "abstract" || ci.selection === "hint") {
             assert(new Skill(skill, "transformation"));
         }
@@ -769,7 +769,7 @@ rule addSubtractSimpleTerm{
         
         setCTNodeData(toMemo);
         let skill = termStr.includes(p.varName) ? "subtraction-var" : 
-            addOrSub === "subtraction" ? "Add/subtract_constant_posCon" : "Add/subtract_constant_negCon";
+            addOrSub === "subtraction" ? "subtraction-pos-const" : "subtraction-neg-const";
         
         if (ci.searchType === "abstract" || ci.selection === "hint") {
             assert(new Skill(skill, "transformation"));
