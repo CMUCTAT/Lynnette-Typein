@@ -627,7 +627,9 @@ rule addSubtractSimpleTerm{
         
         var dupInput = inputRepeated(toMemo, 'full-'+ci.searchType);
         if (ci.isNextStepSearch) {
-            setChainPriority(1);
+            //de-prioritize if no combinable term on other side
+            let priority = (!subtractingConst && !otherSide.eqData.hasVar) ? -1 : 1;
+            setChainPriority(priority);
             if (!hasUnallowedNeg) {
                 //diagram first data
                 if (p.diagramsFirst && p.generatingSteps && !dupInput) {
