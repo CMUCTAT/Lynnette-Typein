@@ -1,5 +1,11 @@
 let currentRow = 0
 
+const searchParams = new URL(window.location).searchParams,
+      templates = searchParams.get('templates'),
+      style = searchParams.get('style')
+if (templates) window.templates = templates
+if (style) document.documentElement.setAttribute('id', style)
+
 function showNextRow() {
   console.log('showNextRow', currentRow)
   let panel = document.getElementById('middlePanel'),
@@ -91,10 +97,12 @@ function addSkillListener() {
     processCommShellEvent(event, message) {
       if (event == 'StartProblem') {
         currentSkills = CTAT.ToolTutor.tutor.getProblemSummary().getSkills()
-        initialSkills = currentSkills ? currentSkills.getAllSkills().map((skill) => skill.clone()) : []
-        previousSkills = currentSkills ? currentSkills.getAllSkills().map((skill) => skill.clone()): []
-        setInitialSkills(initialSkills)
-      } else if (event == 'AssociatedRules' && message && currentSkills) {
+        if (currentSkills) {
+          initialSkills = currentSkills.getAllSkills().map((skill) => skill.clone())
+          previousSkills = currentSkills.getAllSkills().map((skill) => skill.clone())
+          setInitialSkills(initialSkills)
+        }
+      } else if (currentSkills && event == 'AssociatedRules' && message) {
         setInitialSkills(initialSkills)
         let skillUpdates = message.getSkillsObject().getSkillSet(),
             skillLabelElements = document.getElementsByClassName('CTATSkillWindow--label')

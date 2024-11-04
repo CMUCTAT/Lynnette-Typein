@@ -30,8 +30,7 @@ rule bootstrap {
 			diagramsFirst: false,
 			distributionIsTransformation: true,
 			varName: "x",
-			generatePathsOnCorrect: false,
-			showNextRowOnCorrect: true,
+			generatePathsOnCorrect: false
 		},
 		solution = null;
 		//set up problem config
@@ -107,11 +106,6 @@ rule bootstrap {
 			config.generatePathsOnCorrect = generatePathsOnCorrect;
 		} catch(e) {}
 
-		//whether to reveal next input row on correct step
-		try {
-			config.showNextRowOnCorrect = showNextRowOnCorrect;
-		} catch(e) {}
-
 		//setting up interface (one input)
 		var initName = "start";
 		assert(new interfaceElement(initName, initStr));
@@ -157,15 +151,18 @@ rule bootstrap {
 		modify(initRightExp, "eqData", resRight);
 		var varName = resLeft.varName || resRight.varName;
 		config.varName = varName;
+		console.log("got variable: ",varName);
 		var p = new Problem(pName, rowNames, config, solution);
 		assert(p);
-        p.currentEqStr = initLeft+" = "+initRight;
 		assert(new TPA("solveForText", "UpdateTextField", "Please simplify the equation"));
         if (solution) {
 			
 			//TPA to display tape diagrams for initial exp
 			if (config.useDiagrams) {
 				var argStr = (initLeft+' = '+initRight+','+solution+',') + (config.diagramsFirst ? 'diagramsFirst' : 'diagramsLast');
+				
+				console.log("argStr is "+argStr);
+				
 				
 				assert(new TPA("_root", "setGivenDiagrams", argStr));
 				modify(p, "currentDiagram", {
@@ -230,8 +227,8 @@ rule DoneSolvingForX {
 		ri: rowInfo;
 	} then {
 		var xVal = leftSimpd === p.varName ? rightSimpd : leftSimpd;
-		//console.log("solved for x: "+xVal);
-		//console.log("skills are: ",getFacts("Skill"));
+		console.log("solved for x: "+xVal);
+		console.log("skills are: ",getFacts("Skill"));
 		if ((+xVal)%1 !== 0) {
 			throw new Error("non-integer value of x");
 		} else {
@@ -298,13 +295,16 @@ rule focusSolutionStep {
 		not (h: IsHintMatch);
 		not (ci: cycleInfo);
 		p: Problem !p.equationChanged {rows: rows};
+		sv: StudentValues sv.tutored {selection: sel};
+		ie1: interfaceElement ie1.name === rows[0] && !ie1.value;
+		svNum: Number from getNumFromRowName(sel);
+		lastSvNum: Number lastSvNum < svNum from getNumFromRowName(p.lastRowId);
 		e1: TreeExp e1.side === "left";
 		e2: TreeExp e2.side === "right";
 	}
 	then {
 		clearInputHistory();
-		let sv = getStudentInput();
-		let sel = sv.selection;
+		
 		let e1Str = e1.tree.toString(),
 			e2Str = e2.tree.toString(),
 			eStr = e1Str+'='+e2Str,
@@ -343,10 +343,9 @@ rule focusSolutionStep {
 		if (!valid) {
 			checkSAI({selection: sv.selection, action: sv.action, input: sv.input}, null, true);
 			msg && assert(new BugMessage(msg));
-
 			backtrack();
 		} else {
-
+		
 			let initialEqProperties = {
 				left: {
 					multipliedBy: e1.multipliedBy,
@@ -375,14 +374,15 @@ rule doNextStepSearch {
 		not (h: IsHintMatch);
 		not (ci: cycleInfo);
 		p: Problem !p.equationChanged {rows: rows};
+		sv: StudentValues sv.tutored {selection: sel};
+		ie1: interfaceElement ie1.name === rows[0] && !ie1.value;
+		svNum: Number from getNumFromRowName(sel);
+		lastSvNum: Number lastSvNum < svNum from getNumFromRowName(p.lastRowId);
 		e1: TreeExp e1.side === "left";
 		e2: TreeExp e2.side === "right";
 	} then {
 
 		clearInputHistory();
-
-		let sv = getStudentInput();
-		let sel = sv.selection;
 		
 		let e1Str = e1.tree.toString(),
 			e2Str = e2.tree.toString(),
@@ -586,7 +586,7 @@ rule write {
 				var tInput = tSai.input;
 				var tInputSides = tInput.split("=").map((s)=>algParse(s,true,true).toString());
 				//if no operations, only consider correct if swapped
-				if (checkEqualEquation(sInputStrs[0], tInputSides[0]) && checkEqualEquation(sInputStrs[1], tInputSides[1])) {
+				if (ops.length && checkEqualEquation(sInputStrs[0], tInputSides[0]) && checkEqualEquation(sInputStrs[1], tInputSides[1])) {
 					//console.log("NOT SWAPPED");
 					//console.log("ops are ",ops);
 					return true;
@@ -613,12 +613,6 @@ rule write {
 				backtrack();
 			}else{
 				//correct
-
-				if (!swapped && !ops.length) {
-					//equation unchanged
-					assert(new SuccessMessage("While that is technically correct, it does not get you any closer to the solution."));
-				}
-
 				modify(ie, "value", input);    
 				
 				if (!(!ci.otherSideFree || ci.focus === "full")) {
@@ -711,9 +705,7 @@ rule write {
 						modify(p, "currentDiagram", diagramData);
 					}
 				} else {
-					if (p.showNextRowOnCorrect) {
-						assert(new TPA("_root", "showNextRow", 'arg'));
-					}
+					assert(new TPA("_root", "showNextRow", 'arg'));
 				}
 				
 				//set wm expressions to student's version
@@ -725,7 +717,7 @@ rule write {
 				equationChanged(e1, sInputSides[0], e1Props);
 				equationChanged(e2, sInputSides[1], e2Props);
 				
-                bulkModify(p, {"swapped": ci.swapped, currentEqStr: studentInput});
+				modify(p, "swapped", ci.swapped);
 				retract(ci);
 				
 				if( !p.timeToGenSteps ) {
@@ -800,6 +792,7 @@ rule foundSolutionPath {
 		ci: cycleInfo ci.searchType === "detailed";
 		ri: rowInfo;
 	} then {
+		console.log("got a solution path: ", ci.steps);
 		addSolutionPath(ci.steps.slice());
 		backtrack();
 	}

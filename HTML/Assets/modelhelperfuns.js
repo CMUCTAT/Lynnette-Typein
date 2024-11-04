@@ -1,9 +1,9 @@
 
-removeDups = function(arr) {
-	return arr.filter((n, idx)=>arr.indexOf(n) === idx);
+removeDups = function (arr) {
+	return arr.filter((n, idx) => arr.indexOf(n) === idx);
 }
 
-var genDiagramTPA = (function() {
+var genDiagramTPA = (function () {
 	var opToFunctionMap = {
 		'subtraction': 'setSubtractionDiagrams',
 		'division-simple': 'setDivisionDiagrams',
@@ -14,7 +14,7 @@ var genDiagramTPA = (function() {
 		var transformation = transformationList[0]; //only cover one right now
 		console.log(transformation);
 		var functionName = opToFunctionMap[transformation.operation],
-			simpSides = transformation.expAfter.split("=").map((side)=>CTATAlgebraParser.theParser.algSimplify(side)),
+			simpSides = transformation.expAfter.split("=").map((side) => CTATAlgebraParser.theParser.algSimplify(side)),
 			argStr = simpSides.concat(transformation.operand).join(",");
 		console.log(functionName);
 		return ['_root', functionName, argStr];
@@ -25,17 +25,17 @@ function unknownTermStr(t, fillInCouldBe) {
 	return fillInCouldBe ? simpleTermStr(t.couldBe) : "?";
 }
 
-function checkEqualEquation(input1, input2){
+function checkEqualEquation(input1, input2) {
 	return CTATAlgebraParser.theParser.algIdentical(input1, input2, false, false);
 }
 
 /*check if two strings are the same expression
 */
 function SAIeq(sai1, sai2) {
-//	console.log("+++saiEqual", sai1, sai2);
-	if ( (sai1.selection === sai2.selection)
-			&& (sai1.action === sai2.action)
-			&& checkEqualEquation(sai1.input, sai2.input) ) {
+	//	console.log("+++saiEqual", sai1, sai2);
+	if ((sai1.selection === sai2.selection)
+		&& (sai1.action === sai2.action)
+		&& checkEqualEquation(sai1.input, sai2.input)) {
 		return true;
 	}
 	else {
@@ -47,14 +47,14 @@ function SAIeq(sai1, sai2) {
 return the opposite side of side
 */
 function oppositeSide(side) {
-//	console.log("oppositeSide", side);
-	return side === "left" ? "right" : "left"; 
+	//	console.log("oppositeSide", side);
+	return side === "left" ? "right" : "left";
 }
 
 /*
 set fact number
 */
-var curFactNr  = 0;
+var curFactNr = 0;
 function setFactNr(f) {
 	f.factNr = curFactNr++;
 }
@@ -83,22 +83,22 @@ function clearInputHistory(key) {
 	writeInputs = [];
 }
 
-function inputRepeated(input, side){
+function inputRepeated(input, side) {
 	let ret = possibleInputs[side][input];
 	return ret;
 }
 
-function recordInput(input, side){
+function recordInput(input, side) {
 	possibleInputs[side][input] = true;
 }
 
-function writeInput(input){
+function writeInput(input) {
 	writeInputs.push(input);
 }
 
-function finishedLastTransformation(){
+function finishedLastTransformation() {
 	var transformations = getFacts("transformation");
-	return ( transformations.length <= 1);
+	return (transformations.length <= 1);
 }
 
 //ret type of interface being used.  Either "dragndrop", "typein", or "diagrams"
@@ -113,17 +113,17 @@ function clearValidSteps() {
 }
 
 function addValidStep(operation, operand, expBefore, expAfter, hints, skills) {
-	console.log("add valid step: ",arguments);
-	_validSteps.push({"operation": operation, "operand": operand, "expBefore": expBefore, "expAfter": expAfter, "hints": hints, "skills": skills});
+	console.log("add valid step: ", arguments);
+	_validSteps.push({ "operation": operation, "operand": operand, "expBefore": expBefore, "expAfter": expAfter, "hints": hints, "skills": skills });
 }
 
 function stringifyValidSteps() {
-	var str = _validSteps.map((step)=>{ return step.expBefore+','+step.operation+','+step.operand }).join('|');
+	var str = _validSteps.map((step) => { return step.expBefore + ',' + step.operation + ',' + step.operand }).join('|');
 	return str;
 }
 
 function getValidStepHintsAndSkills() {
 	//for now just return first one.
-	let step = _validSteps[0] ? _validSteps[0] : {hints: [], skills: []};
-	return [{hints: step.hints, skills: step.skills}];
+	let step = _validSteps[0] ? _validSteps[0] : { hints: [], skills: [] };
+	return [{ hints: step.hints, skills: step.skills }];
 }

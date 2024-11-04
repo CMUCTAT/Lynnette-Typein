@@ -1,5 +1,5 @@
 global skillDefinitions = [
-	
+
 	{
 		category: "transformation",
 		skillName: "subtraction-var",

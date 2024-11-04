@@ -1,8 +1,8 @@
 var currentRow = 0
 var pathSelected = null;
-var masteredSkills = [];
+var masteredSkills;
 
-const AUTO_SOLVE_MSG = "Because you have demonstrated the knowledge needed to complete the remaining steps, I have finished the problem for you.  You can review what I've done, or click \"Finish Problem\" to advance."
+const AUTO_SOLVE_MSG = "You've shown you know how to finish the rest! I went ahead and solved it for you. You can review my steps, or just click \"Finish Problem\" to move on."
 
 
 function takeStep(step) {
@@ -50,18 +50,13 @@ function followPath(path) {
 }
 
 function updateMasteredSkills() {
-  let skills = CTAT.ToolTutor.tutor.getProblemSummary().getSkills();
-  if (skills) {
-    let allSkills = skills.toJSONforTutorshop();
-    masteredSkills = allSkills.filter((s)=> s.p_known >= 0.95);
-    console.log("all skills are ",allSkills.map((s)=>s.name));
-    console.log("mastered skills are ",masteredSkills.map((s)=>s.name));
-  }
+  let allSkills = CTAT.ToolTutor.tutor.getProblemSummary().getSkills().toJSONforTutorshop();
+  masteredSkills = allSkills.filter((s)=> s.p_known >= 0.95);
+  console.log("all skills are ",allSkills.map((s)=>s.name));
+  console.log("mastered skills are ",masteredSkills.map((s)=>s.name));
 }
 
 function showNextRow() {
-  let currentInput = CTATShellTools.findComponent(`solve${currentRow}`)[0]; 
-  currentInput?.setEnabled(false);
   document.getElementById(`solve${++currentRow}Group`).parentNode.style.display = 'flex'
 }
 
@@ -129,7 +124,7 @@ function handleInterfaceAction(message) {
 function handleCorrectAction(message) {
   console.log("correct action, solution paths are now: ",window._solutionPaths);
   const masteredPaths = [];
-  if (window._solutionPaths?.length && !pathSelected) {
+  if (window._solutionPaths && !pathSelected) {
     window._solutionPaths.forEach((sp, idx) => {
       const skills = [...new Set(sp.map((s)=>s.skill))];
       console.log("\tskills for path "+idx+": ",skills);

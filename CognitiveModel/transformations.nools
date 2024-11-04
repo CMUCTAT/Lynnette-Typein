@@ -377,10 +377,11 @@ rule divideByXCoefficient {
     then{
         
         //special case: dividing by -1 when there are additional var terms with coeff 1 leads to infinite search
-        if ((varTerm.coeff === -1) &&
-            ((e1.eqData.varOperands.find((vo)=>vo.coeff === 1)) ||
-              e2.eqData.varOperands.find((vo)=>vo.coeff === 1))) {
+        if (varTerm.coeff === -1) {
+            if ((e1.eqData.varOperands.find((vo)=>vo.coeff === 1)) ||
+                e2.eqData.varOperands.find((vo)=>vo.coeff === 1)) {
                 backtrack();
+            }
         } else {
             var side1 = e1.side;
             var expBefore = getFullStr(e1, e2);
@@ -448,7 +449,6 @@ rule divideByXCoefficient {
             } else if (dupInput) {
                 backtrack();
             } else {
-
                 recordInput(toMemo, 'full-'+ci.searchType);
                 let ciMods = {"modified": true, "opStr": newOpStr};
                 if (ci.searchType === "abstract") {
@@ -590,14 +590,8 @@ rule addSubtractSimpleTerm{
             }
         } 
         
-        var newExp1Str = newExp1.toString();
-        var newExp2Str = newExp2.toString();
-        
-        let firstChar = termStr.charAt(0);
-        const hintInput = p.currentEqStr.split("=").map((s)=>{
-            return s+(firstChar === "-" ? "+"+termStr.slice(1) : "-"+termStr);
-        }).join(" = ");
-
+        newExp1Str = newExp1.toString();
+        newExp2Str = newExp2.toString();
         var newFull = newExp1Str < newExp2Str ? newExp1Str + ' = ' + newExp2Str : newExp2Str + ' = ' + newExp1Str;
         var input = (subtractFrom.side === "left" ? newExp1Str+' = '+newExp2Str : newExp2Str+' = '+newExp1Str);
         var newOpStr = ci.opStr+'t,addSubtractSimpleTerm '+termStr+';';
@@ -627,9 +621,7 @@ rule addSubtractSimpleTerm{
         
         var dupInput = inputRepeated(toMemo, 'full-'+ci.searchType);
         if (ci.isNextStepSearch) {
-            //de-prioritize if no combinable term on other side
-            let priority = (!subtractingConst && !otherSide.eqData.hasVar) ? -1 : 1;
-            setChainPriority(priority);
+            setChainPriority(1);
             if (!hasUnallowedNeg) {
                 //diagram first data
                 if (p.diagramsFirst && p.generatingSteps && !dupInput) {
@@ -659,13 +651,9 @@ rule addSubtractSimpleTerm{
                             assert(new Hint("Drag the "+addOrSub+" sign onto the "+s+" side."));
                         }
                     } else {
-                        assert(new Hint("Enter "+hintInput));
+                        assert(new Hint("Enter "+input));
                     }
                     checkSAI({selection: "solve"+(16-p.rows.length), action: "UpdateTextField", input: input});
-                    //prioritize moving constants over variables
-                    if (subtractingConst) {
-                        setChainPriority(2);
-                    }
                 }
             }
             backtrack();

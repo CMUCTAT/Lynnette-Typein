@@ -56,7 +56,6 @@ define Problem {     // do we need this at all? mostly used for accessing the so
 			this.generatingSteps = true;
 		}
 		this.generatePathsOnCorrect = config.generatePathsOnCorrect || false;
-		this.showNextRowOnCorrect = config.showNextRowOnCorrect;
 	}
 }
 

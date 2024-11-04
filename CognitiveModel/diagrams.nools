@@ -7,9 +7,9 @@ rule StartGenStepDiagrams {
 	} then {
 		clearInputHistory();
 		clearValidSteps();
-		
+
 		let eStr = getFullStr(e1, e2);
-		
+
 		let initialEqProperties = {
 			left: {
 				multipliedBy: e1.multipliedBy,
@@ -22,7 +22,7 @@ rule StartGenStepDiagrams {
 				varOrConstSide: e2.varOrConstSide
 			}
 		};
-		
+
 		modify(p, "generatingSteps", true);
 		assert(new cycleInfo("full", 'genDiagrams', true, p.nTransLastCycle, eStr, e1.tree.clone(), e2.tree.clone(), null, null, initialEqProperties, "abstract", true));
 		assert(new rowInfo(16-p.rows.length));
@@ -101,7 +101,7 @@ rule PickDiagram {
 		var bugMsg = null;
 		var successMsg = null;
 		console.log("pick diagram op[0] is "+op[0]);
-		
+
 		switch(op[0]) {
 			case 'subtraction':
 				successMsg = "Good job!  You subtracted "+op[1]+" from both sides of the equation to isolate the variable.";
@@ -174,7 +174,7 @@ rule PickDiagram {
 				bugMsg = "Is it appropriate to SUBTRACT from both sides? How would DIVISION look like in the diagrams?";
 				break;
 		}
-		
+
 		//get/assert step skills
 		//get associated skills
 		if (prob.chooseDiagrams && !prob.diagramsHidden && prob.diagramToChoose) {
@@ -198,13 +198,13 @@ rule PickDiagram {
 				skills = ['selectd-given-eq'];
 			}
 		}
-		
+
 		if (!prob.diagramsHidden) { //don't update skills on simulated diagram steps
 			skills.forEach((skill)=> assert(new Skill(skill, 'diagram')));
 		}
-		
+
 		if (checkSAI({selection: s, action: a, input: tutorInput}, () => {
-			
+
 			console.log("check diagram sai, operation is "+operation);
 			if (prob.diagramToChoose && prob.diagramToChoose !== diagramVal) {
 				return false;
@@ -263,18 +263,18 @@ rule HintDiagramsFirst {
 		h: IsHintMatch;
 		p: Problem !p.chooseDiagrams && p.validStepHintsAndSkills.length;
 	} then {
-		
+
 		setChainPriority(2);
 
 		p.validStepHintsAndSkills.forEach((hAndS)=>{
 			hAndS.hints.forEach((h)=>assert(new Hint(h)));
 			hAndS.skills.diagram.forEach((s)=>assert(new Skill(s, "diagram")));
 		});
-		
+
 		var diagramRowNum = 15 - p.rows.length;
 		var tutorInput = "radioExplain"+diagramRowNum+"Diagram1";
 		checkSAI({selection: "groupExplain"+diagramRowNum+"Diagrams", action: "UpdateRadioButton", input: tutorInput});
-		
+
 		backtrack();
 	}
 }
@@ -285,9 +285,9 @@ rule HintDiagramsChoice {
 		h: IsHintMatch;
 		p: Problem p.chooseDiagrams && !p.diagramsHidden;
 	} then {
-		
+
 		setChainPriority(2);
-		
+
 		if (p.diagramToChoose) {
 			let [operation, operand] = p.diagramToChoose.split(',');
 			let step = _validSteps.find((vs)=>vs.operation === operation && vs.operand == operand);
@@ -301,11 +301,11 @@ rule HintDiagramsChoice {
 				hAndS.skills.diagram.forEach((s)=>assert(new Skill(s, "diagram")));
 			});
 		}
-		
+
 		var diagramRowNum = 15 - p.rows.length;
 		var tutorInput = "radioExplain"+diagramRowNum+"Diagram1";
 		checkSAI({selection: "groupExplain"+diagramRowNum+"Diagrams", action: "UpdateRadioButton", input: tutorInput});
-		
+
 		backtrack();
 	}
 }
@@ -319,38 +319,37 @@ rule HintDiagramsLast {
 		var operation = cd.operation,
 			operand = cd.operand,
 			expBefore = cd.expBefore,
-			expAfter = cd.expAfter,
-            isVar = !isNaN(algSimplify(operand));
-			
+			expAfter = cd.expAfter;
+
 		switch(operation) {
 			case 'initial':
-				assert(new Hint("Remember that you need to keep the length of the tapes equal because they are “balanced”."));
+				assert(new Hint("Remember that you need to keep the length of the tapes equal because they are â€œbalancedâ€."));
 				assert(new Hint("The tape at the top shows the left-hand side of the equation, and one at the bottom shows the right-hand side of the equation."));
 				assert(new Skill("selectd-given-eq", "diagram"));
 			break;
-			case 'subtraction': 
-				assert(new Hint("Remember that you need to keep the length of the tapes equal because they are “balanced”."));;
+			case 'subtraction':
+				assert(new Hint("Remember that you need to keep the length of the tapes equal because they are â€œbalancedâ€."));;
 				assert(new Hint("Remember that you need to subtract (take out) the same thing from both sides."));
-				assert(new Skill("selectd-subtract-"+(isVar ? 'var' : 'const'), "diagram"));
+				assert(new Skill("selectd-subtract-"+(operand.includes('x') ? 'var' : 'const'), "diagram"));
 			break;
 			case 'division-simple':
-				assert(new Hint("Remember that you need to keep the length of the tapes equal because they are “balanced”."));
+				assert(new Hint("Remember that you need to keep the length of the tapes equal because they are â€œbalancedâ€."));
 				assert(new Hint("Remember that you need to divide by the same number from both sides."));
 				assert(new Hint("Make sure to differentiate between subtraction and division and how they are represented."));
 				assert(new Skill("selectd-divide-simple", "diagram"));
 			break;
 			case 'division-complex':
-				assert(new Hint("Remember that you need to keep the length of the tapes equal because they are “balanced”."));
+				assert(new Hint("Remember that you need to keep the length of the tapes equal because they are â€œbalancedâ€."));
 				assert(new Hint("If you divide a tape by "+operand+", the length of the tape would be 1/"+operand));
 				assert(new Hint("Make sure to differentiate between subtraction and division and how they are represented."));
 				assert(new Skill("selectd-divide-complex", "diagram"));
 			break;
 		}
-		
+
 		var diagramRowNum = 15 - p.rows.length;
 		var tutorInput = "radioExplain"+diagramRowNum+"Diagram1";
 		checkSAI({selection: "groupExplain"+diagramRowNum+"Diagrams", action: "UpdateRadioButton", input: tutorInput});
-		
+
 		backtrack();
 	}
 }
@@ -385,10 +384,10 @@ rule HintDiagramStep {
 		//assert skills
 		ns.skills.forEach((s)=> assert( new Skill(s, 'transformation') ));
 		//predict step
-		checkSAI({selection: `solve${16-p.rows.length}`, action: "UpdateTextField", input: ns.expAfter}); 
-		
+		checkSAI({selection: `solve${16-p.rows.length}`, action: "UpdateTextField", input: ns.expAfter});
+
 		setChainPriority(1);
-		
+
 		backtrack();
 	}
 }
