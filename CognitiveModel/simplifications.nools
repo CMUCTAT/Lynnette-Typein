@@ -209,7 +209,7 @@ rule Divide{
 		let input = exp.side === "left" ? newExpStr+' = '+otherExpStr : otherExpStr+' = '+newExpStr;
 		setCTNodeData(input);
 		
-		let skill = "divide";
+		let skill = "simplify-division";
 		assert(new Skill(skill, "simplification"));
 		
 		if(ci.isNextStepSearch) {

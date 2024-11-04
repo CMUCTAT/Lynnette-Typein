@@ -7,18 +7,28 @@ global skillDefinitions = [
 	},
 	{
 		category: "transformation",
-		skillName: "subtraction-const",
-		label: "Subtract Constant"
+		skillName: "subtraction-pos-const",
+		label: "Subtract Positive Constant"
 	},
 	{
 		category: "transformation",
-		skillName: "division-simple",
-		label: "Simple Division"
+		skillName: "subtraction-neg-const",
+		label: "Subtract Negative Constant"
 	},
 	{
 		category: "transformation",
-		skillName: "division-complex",
-		label: "Complex Division"
+		skillName: "division-pos-coef",
+		label: "Division Positive"
+	},
+	{
+		category: "transformation",
+		skillName: "division-neg-coef",
+		label: "Division Negative"
+	},
+	{
+		category: "transformation",
+		skillName: "division-minus-x",
+		label: "Division -X"
 	},
 	{
 		category: "transformation",
@@ -32,7 +42,7 @@ global skillDefinitions = [
 	},
 	{
 		category: "simplification",
-		skillName: "divide",
+		skillName: "simplify-division",
 		label: "Simplify Division"
 	},
 	{
@@ -54,5 +64,5 @@ global skillDefinitions = [
 		category: "simplification",
 		skillName: "cancel-const",
 		label: "Cancel Const Terms"
-	},
+	}
 ];

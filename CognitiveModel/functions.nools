@@ -176,12 +176,34 @@ function getIsNaN(n) {
 	return isNaN(n);
 }
 
+function nToString(n) {
+	return String(n);
+}
+
+function strToN(str) {
+	return Number(str);
+}
+
+function stableParse(exp) {
+	var parsed = algParse(exp, true, true);
+	var nParse = 0;
+	while (!algIdentical(parsed, exp)) {
+		exp = parsed;
+		parsed = algParse(exp.toString(), true, true);
+		nParse++;
+		if (nParse > 100) {
+			console.warn("stableParse failed: "+exp);
+			break;
+		}
+	}
+	return parsed;
+}
+
 function canCancelDivisor(expTree, divisor) {
 	return mathUtil.canCancelDivisor(expTree, divisor);
 }
 
 function equationChanged(expFact, newTree, otherPropertiesChanged) {
-//	console.log("equationChanged; expFact is ",expFact," newTree is ",newTree);
 	var res = mathUtil.scanExpression(newTree);
 	otherPropertiesChanged = otherPropertiesChanged || {};
 	otherPropertiesChanged['tree'] = newTree;
