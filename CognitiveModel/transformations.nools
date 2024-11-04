@@ -378,11 +378,10 @@ rule divideByXCoefficient {
     then{
         
         //special case: dividing by -1 when there are additional var terms with coeff 1 leads to infinite search
-        if (varTerm.coeff === -1) {
-            if ((e1.eqData.varOperands.find((vo)=>vo.coeff === 1)) ||
-                e2.eqData.varOperands.find((vo)=>vo.coeff === 1)) {
+        if ((varTerm.coeff === -1) &&
+            ((e1.eqData.varOperands.find((vo)=>vo.coeff === 1)) ||
+              e2.eqData.varOperands.find((vo)=>vo.coeff === 1))) {
                 backtrack();
-            }
         } else {
             var side1 = e1.side;
             var expBefore = getFullStr(e1, e2);
@@ -462,6 +461,7 @@ rule divideByXCoefficient {
             } else if (dupInput) {
                 backtrack();
             } else {
+
                 recordInput(toMemo, 'full-'+ci.searchType);
                 let ciMods = {"modified": true, "opStr": newOpStr};
                 if (ci.searchType === "abstract") {
@@ -485,7 +485,6 @@ rule divideByXCoefficient {
         }
     }
 }
-
 
 rule divideByAbsValOfXCoefficient {
     salience: 6;
@@ -712,7 +711,6 @@ rule multiplyByNeg1 {
     }
 }
 
-
 /*
 transformation
 
@@ -762,9 +760,8 @@ rule addSubtractSimpleTerm{
         }
         
         setCTNodeData(toMemo);
-        let skill = termStr.includes(p.varName) ? "subtraction-var" : 
+        let skill = termStr.includes(p.varName) ? "subtraction-var" :
             addOrSub === "subtraction" ? "subtraction-pos-const" : "subtraction-neg-const";
-        
         if (ci.searchType === "abstract" || ci.selection === "hint") {
             assert(new Skill(skill, "transformation"));
         }

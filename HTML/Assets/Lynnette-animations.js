@@ -124,7 +124,7 @@ function handleInterfaceAction(message) {
 function handleCorrectAction(message) {
   console.log("correct action, solution paths are now: ",window._solutionPaths);
   const masteredPaths = [];
-  if (window._solutionPaths && !pathSelected) {
+  if (window._solutionPaths?.length && !pathSelected) {
     window._solutionPaths.forEach((sp, idx) => {
       const skills = [...new Set(sp.map((s)=>s.skill))];
       console.log("\tskills for path "+idx+": ",skills);

@@ -1,4 +1,4 @@
-(function() {
+(function () {
 	function isOneTimesVar(factor1, factor2) {
 		return (factor1.operator === "VAR" && factor2.operator === "CONST" && Math.abs(factor2.value) === 1)
 			|| (factor2.operator === "VAR" && factor1.operator === "CONST" && Math.abs(factor1.value) === 1); 
@@ -131,12 +131,12 @@
 						denominator = this.getReciprocal(factor);
 					}
 				}
-				if(isSimple) {
+
+				if (isSimple) {
 					//for every pair of simple factors...
 					for (let otherIdx = 0; otherIdx < simpleFactors.length; otherIdx++) {
 						let otherSf = simpleFactors[otherIdx];
 						let otherSfExp = typeof otherSf.exp === "object" ? otherSf.exp.evaluate() : otherSf.exp;
-
 						if (factorExp === otherSfExp) {
 							if (!isNaN(factorStr) && !isNaN(otherSf.toString())
 								|| isOneTimesVar(factor, otherSf)
@@ -318,8 +318,7 @@
 					scanFunc = 'scanUminusNode';
 					break;
 				default:
-					console.log("unsupported expression form 3 for exp: ",exp);
-					throw new Error("unsupported expression form 3 for exp: ",exp);
+					throw new Error("unsupported expression form 3 for exp: " + exp);
 			}
 			let scanRes;
 			if (scanFunc) {
