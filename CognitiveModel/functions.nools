@@ -295,6 +295,23 @@ function applyTransformation(probFact, pt) {
 	}
 }
 
+function getEqProperties(leftExp, rightExp) {
+	return {
+		left: {
+			multipliedBy: leftExp.multipliedBy,
+			dividedBy: leftExp.dividedBy,
+			varOrConstSide: leftExp.varOrConstSide,
+			movedTermMap: leftExp.movedTermMap
+		},
+		right: {
+			multipliedBy: rightExp.multipliedBy,
+			dividedBy: rightExp.dividedBy,
+			varOrConstSide: rightExp.varOrConstSide,
+			movedTermMap: rightExp.movedTermMap			
+		}
+	};
+}
+
 /** 
  Simplification functions
 **/

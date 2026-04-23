@@ -258,9 +258,11 @@ define TreeExp {
 	varOperands: null,
 	constOperands: null,
 	side: null,
+	movedTermMap: null,
 	constructor: function(str, side) {
 		this.tree = str && algParse(str);
 		this.side = side;
+		this.movedTermMap = {};
 		this.eqData = {
 			varOperands: [],
 			constOperands: [],

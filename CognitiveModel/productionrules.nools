@@ -14,7 +14,7 @@ rule bootstrap {
 	}
 	then {
 		
-		//setTracerLogFlags("fire", "debug");
+		setTracerLogFlags("sai_check");
 		
 		setParser();
 		var config = {
@@ -189,18 +189,7 @@ rule bootstrap {
 			
 			clearInputHistory();
 			assert(new StudentValues('fake', 'student', 'input'));
-			let initialEqProperties = {
-				left: {
-					multipliedBy: initLeftExp.multipliedBy,
-					dividedBy: initLeftExp.dividedBy,
-					varOrConstSide: initLeftExp.varOrConstSide
-				},
-				right: {
-					multipliedBy: initRightExp.multipliedBy,
-					dividedBy: initRightExp.dividedBy,
-					varOrConstSide: initRightExp.varOrConstSide
-				}
-			};
+			let initialEqProperties = getEqProperties(initLeftExp, initRightExp);
 			var ci = assert(new cycleInfo("full", 'fake', true, p.nTransLastCycle, initStr,
 				initLeftExp.tree.clone(), initRightExp.tree.clone(), null, null, initialEqProperties, "abstract"));
 			if (!algSimplified(initLeft) || !algSimplified(initRight)) {
@@ -347,18 +336,7 @@ rule focusSolutionStep {
 			backtrack();
 		} else {
 
-			let initialEqProperties = {
-				left: {
-					multipliedBy: e1.multipliedBy,
-					dividedBy: e1.dividedBy,
-					varOrConstSide: e1.varOrConstSide
-				},
-				right: {
-					multipliedBy: e2.multipliedBy,
-					dividedBy: e2.dividedBy,
-					varOrConstSide: e2.varOrConstSide
-				}
-			};
+			let initialEqProperties = getEqProperties(e1, e2);
 			modify(sv, "inputSimplified", simpStudentInput);
 			var ci = assert(new cycleInfo("full", sel, true, p.nTransLastCycle, eStr, e1Clone, e2Clone, null, null, initialEqProperties, "abstract", false));
 			assert(new rowInfo(16-rows.length));
@@ -395,18 +373,7 @@ rule doNextStepSearch {
 		let simpStudentInput = sv.input;
 		modify(sv, "inputSimplified", simpStudentInput);
 					
-		let initialEqProperties = {
-			left: {
-				multipliedBy: e1.multipliedBy,
-				dividedBy: e1.dividedBy,
-				varOrConstSide: e1.varOrConstSide
-			},
-			right: {
-				multipliedBy: e2.multipliedBy,
-				dividedBy: e2.dividedBy,
-				varOrConstSide: e2.varOrConstSide
-			}
-		};
+		let initialEqProperties = getEqProperties(e1, e2);
 		
 		var ci = assert(new cycleInfo("full", sel, true, p.nTransLastCycle, eStr, e1Clone, e2Clone, null, null, initialEqProperties, "abstract", true));
 		assert(new rowInfo(16-rows.length));
@@ -499,7 +466,7 @@ rule writeAbstract {
 		
 		if (compFunc(sv.inputSimplified, simplifiedInput) || p.findingAllSolutionPaths) {
 			//match found in abstract search
-			//console.log("abstract match found: "+simplifiedInput);
+			console.log("abstract match found: "+simplifiedInput);
 			//start detailed search:
 				//reset tutor equation to initial state
 				var sides = expAtStart.split('='),
@@ -514,8 +481,8 @@ rule writeAbstract {
 				equationChanged(e1, ci.ogLeftTree, propsToModify1);
 				equationChanged(e2, ci.ogRightTree, propsToModify2);
 				//begin normal search, only allowing transformations performed during matching abstract search chain
-				//console.log("equation reset to "+e1.tree.toString()+" = "+e2.tree.toString());
-				//console.log("required transformations are ",transformations.slice());
+				console.log("equation reset to "+e1.tree.toString()+" = "+e2.tree.toString());
+				console.log("required transformations are ",transformations.slice());
 				modify(ci, "reqTransformations", transformations);
 				modify(ci, "searchType", "detailed");
 				modify(ci, "opStr", "");
@@ -765,18 +732,7 @@ rule startFindAllSolutionPaths {
 		modify(sv, "inputSimplified", simpStudentInput);
 		modify(sv, "input", simpStudentInput);
 					
-		let initialEqProperties = {
-			left: {
-				multipliedBy: e1.multipliedBy,
-				dividedBy: e1.dividedBy,
-				varOrConstSide: e1.varOrConstSide
-			},
-			right: {
-				multipliedBy: e2.multipliedBy,
-				dividedBy: e2.dividedBy,
-				varOrConstSide: e2.varOrConstSide
-			}
-		};
+		let initialEqProperties = getEqProperties(e1, e2);
 		
 		var ci = assert(new cycleInfo("full", sv.selection, true, p.nTransLastCycle, eStr, e1Clone, e2Clone, null, null, initialEqProperties, "abstract", false));
 		assert(new rowInfo(16-p.rows.length));

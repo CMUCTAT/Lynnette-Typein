@@ -484,27 +484,55 @@
 		};
 
 		this.getSubtractableTerms = function (subtractFrom, otherSide) {
+			
+			//list of movable terms
 			var subtractable = [];
+			//eq data for each side
 			var fromData = subtractFrom.eqData,
 				otherData = otherSide.eqData;
+			//first-level var terms on from side
 			var allVarTerms = fromData.varOperands,
-				varTerms = allVarTerms.filter((vo)=>vo.parent === subtractFrom.tree);
-			var constTerms = fromData.constOperands.filter((co)=>co.parent === subtractFrom.tree);
+				varTerms = allVarTerms.filter((vo)=>{
+					const absTermStr = this.getAbsTermStr(vo.term.toString());
+					const movable = vo.parent === subtractFrom.tree && !subtractFrom.movedTermMap[absTermStr];
+					return movable;
+				});
+			//first-level const terms on from side
+			var constTerms = fromData.constOperands.filter((co)=>{
+				const absTermStr = this.getAbsTermStr(co.term.toString());
+				const movable = co.parent === subtractFrom.tree && !subtractFrom.movedTermMap[absTermStr];
+				return movable;
+			});
+			//whether list of movable terms contains any var terms
 			var addedVars = false;
+			
+			//if from side has both const and var terms
 			if (fromData.hasVar && fromData.hasConst) {
-				if (otherData.hasVar && varTerms.length === 1 && 
+				//if other side has var terms
+				//	and only one var on from side
+				//  and there are not two cancelable const terms on from side
+				//  and there are not two cancelable var terms on other side
+				// 	and from side has not been marked as the 'var' side
+				if (otherData.hasVar && 
 					!(constTerms.length === 2 && this.areCancelable(constTerms[0], constTerms[1])) &&
 					!(otherData.varOperands.length === 2 && this.areCancelable(otherData.varOperands[0], otherData.varOperands[1])) &&
 					subtractFrom.varOrConstSide !== "var") 
 				{
+					//var terms on from side are movable
 					subtractable = subtractable.concat(varTerms.filter((vt)=>vt.isSimple));
 					addedVars = true;
-				} 
-				if (otherData.hasConst && constTerms.length === 1 && 
+				}
+				//if other side has const terms
+				//	and only one const on from side
+				//  and there are not two cancelable var terms on from side
+				// 	and there are not two cancelable const terms on other side
+				//	and from side has not been marked as the 'const' side 
+				if (otherData.hasConst && 
 					!(varTerms.length === 2 && this.areCancelable(varTerms[0], varTerms[1])) &&
 					!(otherData.constOperands.length === 2 && this.areCancelable(otherData.constOperands[0], otherData.constOperands[1])) &&
 					subtractFrom.varOrConstSide !== "const") 
 				{
+					//const terms on from side are movable
 					subtractable = subtractable.concat(constTerms.filter((ct)=>ct.isSimple));
 				}
 			}
@@ -869,7 +897,14 @@
 			}
 			return ret;
 		}
-	
+		
+		this.getAbsTermStr = function(termStr) {
+			var absTermStr = termStr;
+	        if (termStr.charAt(0) === "-") {
+	            absTermStr = termStr.slice(1);
+	        }
+	        return absTermStr;
+		} 
 	}
 	
 	window.mathUtil = new MathUtil();
