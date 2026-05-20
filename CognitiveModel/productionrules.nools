@@ -14,8 +14,6 @@ rule bootstrap {
 	}
 	then {
 		
-		setTracerLogFlags("sai_check");
-		
 		setParser();
 		var config = {
 			stepSkipLevel: 3,
@@ -468,7 +466,6 @@ rule writeAbstract {
 		
 		if (compFunc(sv.inputSimplified, simplifiedInput) || p.findingAllSolutionPaths) {
 			//match found in abstract search
-			console.log("abstract match found: "+simplifiedInput);
 			//start detailed search:
 				//reset tutor equation to initial state
 				var sides = expAtStart.split('='),
@@ -483,8 +480,6 @@ rule writeAbstract {
 				equationChanged(e1, ci.ogLeftTree, propsToModify1);
 				equationChanged(e2, ci.ogRightTree, propsToModify2);
 				//begin normal search, only allowing transformations performed during matching abstract search chain
-				console.log("equation reset to "+e1.tree.toString()+" = "+e2.tree.toString());
-				console.log("required transformations are ",transformations.slice());
 				modify(ci, "reqTransformations", transformations);
 				modify(ci, "searchType", "detailed");
 				modify(ci, "opStr", "");
