@@ -1,41 +1,3 @@
-rule DistributeMultiplication{
-	salience: 5;
-	when{
-		b: Boolean b === true from false;
-	}then {
-		console.log("distributemultiplication");
-	}
-}
-
-
-rule CancelDivision {
-	salience: 5;
-	when {
-		b: Boolean b === true from false;
-	} then {
-		console.log("canceldivision");
-	}
-}
-
-rule CombineDivTerms {
-	salience: 5;
-	when{
-		b: Boolean b === true from false;
-	} then {
-		console.log("combinedivterms");
-	}
-}
-
-rule DivideProductTerm{
-	salience: 5;
-	when {
-		b: Boolean b === true from false;
-	}
-	then {   // simplest way may be to modify the coeff of the dividend term and move it to the toplevel
-		console.log("divideproductterm");
-	}
-}
-
 /**
 	MOVED DISTRIBUTION TO TRANSFORMATIONS
 **/
@@ -171,6 +133,7 @@ rule Divide{
 		var divType = '';
 		var divideBy = algSimplify(toDivide.denom+"^-1");
 		var newOpStr = ci.opStr+'s,divide '+timesNodeStr+';';
+		
 		if (timesNode.factors.length > 2) {
 			let toDivideCpy = algParse(timesNode);
 			let s1Idx = timesNode.factors.indexOf(toDivide.numer),

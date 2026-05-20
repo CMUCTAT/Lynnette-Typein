@@ -414,6 +414,8 @@ rule doNextStepSearch {
 		if (!algSimplified(e1Str) || !algSimplified(e2Str)) {
 			modify(ci, "needSimp", true);
 		}
+		let canSimplify = checkCanSimplify();
+		modify(ci, "canSimplify", canSimplify);
 	}
 } 
 
@@ -600,7 +602,6 @@ rule write {
 		
 		if(checkSAI({selection: s, action: "UpdateTextField", input: input}, compFunc, isBug)) {
 			if(isBug){
-				//console.log("bug match");
 				var message;
 				if (needToSimplify) {
 					message = "You need to fully simplify the expression before you can begin a new transformation";
