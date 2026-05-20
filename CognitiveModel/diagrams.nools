@@ -10,18 +10,7 @@ rule StartGenStepDiagrams {
 		
 		let eStr = getFullStr(e1, e2);
 		
-		let initialEqProperties = {
-			left: {
-				multipliedBy: e1.multipliedBy,
-				dividedBy: e1.dividedBy,
-				varOrConstSide: e1.varOrConstSide
-			},
-			right: {
-				multipliedBy: e2.multipliedBy,
-				dividedBy: e2.dividedBy,
-				varOrConstSide: e2.varOrConstSide
-			}
-		};
+		let initialEqProperties = getEqProperties(e1, e2);
 		
 		modify(p, "generatingSteps", true);
 		assert(new cycleInfo("full", 'genDiagrams', true, p.nTransLastCycle, eStr, e1.tree.clone(), e2.tree.clone(), null, null, initialEqProperties, "abstract", true));

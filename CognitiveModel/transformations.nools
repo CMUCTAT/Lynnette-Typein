@@ -579,7 +579,7 @@ rule addSubtractSimpleTerm{
         var subtractingConst = mathUtil.isConst(term.term);
         var termStr = term.term.toString();
         var addOrSub = "subtraction";
-        var absTermStr = termStr;
+        var absTermStr = mathUtil.getAbsTermStr(termStr);
         var newExp1 = algParse(algApplyRules(subtractFrom.tree.toString()+'-'+termStr, ["flatten"]), true, true);
         var newExp2 = algParse(algApplyRules(otherSide.tree.toString()+'-'+termStr, ["flatten"]), true, true);
         var hasUnallowedNeg = false;
@@ -602,10 +602,6 @@ rule addSubtractSimpleTerm{
         var input = (subtractFrom.side === "left" ? newExp1Str+' = '+newExp2Str : newExp2Str+' = '+newExp1Str);
         var newOpStr = ci.opStr+'t,addSubtractSimpleTerm '+termStr+';';
         var toMemo = ci.searchType === "abstract" ? sortLikeTransformations(newOpStr) : newFull;
-        if (termStr.charAt(0) === "-") {
-            addOrSub = "addition";
-            absTermStr = termStr.slice(1);
-        }
         
         setCTNodeData(toMemo);
         let skill = termStr.includes(p.varName) ? "subtraction-var" : "subtraction-const";
@@ -680,9 +676,15 @@ rule addSubtractSimpleTerm{
                 ciMods.reqTransformations = ci.reqTransformations.slice(1);
                 ciMods.steps = ci.steps.slice().concat({input, skill});
             }
+
+            const newFromMovedTermMapStr = JSON.stringify(subtractFrom.movedTermMap);
+            const newFromMovedTermMap = JSON.parse(newFromMovedTermMapStr);
+            newFromMovedTermMap[absTermStr] = true;            
+            equationChanged(subtractFrom, newExp1, {"varOrConstSide": subtractingConst ? "var" : "const", movedTermMap: newFromMovedTermMap});
             
-            equationChanged(subtractFrom, newExp1, {"varOrConstSide": subtractingConst ? "var" : "const"});
-            equationChanged(otherSide, newExp2, {"varOrConstSide": subtractingConst ? "const" : "var"});
+            const newOtherMovedTermMap = JSON.parse(JSON.stringify(otherSide.movedTermMap));
+            newOtherMovedTermMap[absTermStr] = true;
+            equationChanged(otherSide, newExp2, {"varOrConstSide": subtractingConst ? "const" : "var", movedTermMap: newOtherMovedTermMap});
             
             if (hasUnallowedNeg) {
                 ciMods.inputIsBug = true;
@@ -711,7 +713,7 @@ rule nonStrategicAddSubtractSimpleTerm {
         subtractFrom: TreeExp {side: fromSide};
         otherSide: TreeExp otherSide.side !== subtractFrom.side {side: toSide};
         termObj: Object from getNonStrategicSubtractableTerms(subtractFrom, otherSide);
-        ci: cycleInfo !ci.opStr && ((!ci.inputIsBug && ci.searchType === "abstract") || nextTransformationIs(ci.reqTransformations, "addSubtractSimpleTerm", termObj.term.term.toString()));
+        ci: cycleInfo !ci.opStr && ((!ci.inputIsBug && ci.searchType === "abstract") || nextTransformationIs(ci.reqTransformations, "nonStrategicAddSubtractSimpleTerm", termObj.term.term.toString()));
         ri: rowInfo;
     }
     then {
@@ -730,7 +732,7 @@ rule nonStrategicAddSubtractSimpleTerm {
         var newExp2Str = newExp2.toString();
         var newFull = newExp1Str < newExp2Str ? newExp1Str + ' = ' + newExp2Str : newExp2Str + ' = ' + newExp1Str;
         var input = (subtractFrom.side === "left" ? newExp1Str+' = '+newExp2Str : newExp2Str+' = '+newExp1Str);
-        var newOpStr = ci.opStr+'t,addSubtractSimpleTerm '+termStr+';';
+        var newOpStr = ci.opStr+'t,nonStrategicAddSubtractSimpleTerm '+termStr+';';
         var toMemo = ci.searchType === "abstract" ? sortLikeTransformations(newOpStr) : newFull;
         if (termStr.charAt(0) === "-") {
             addOrSub = "addition";
